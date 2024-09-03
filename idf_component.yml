@@ -1,6 +1,6 @@
 version: "0.0.1"
-description: "Driver for the NAU7802 ADC"
-url: "https://github.com/jeffersonjhunt/esp32-idf-nau7802"
+description: "Driver for the Sensirion SHT4x series of temperature and humidity sensors."
+url: "https://github.com/jeffersonjhunt/esp32-idf-sht4x"
 license: "GPLv3"
 dependencies:
   idf:
