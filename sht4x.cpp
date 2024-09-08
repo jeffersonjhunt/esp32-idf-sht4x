@@ -73,9 +73,17 @@ esp_err_t SHT4X::readSerialNumber()
   uint8_t cmd = CMD_READ_SERIAL;
   sht4x_data_t data;
 
+  if( isMeasuring() )
+  {
+    ESP_LOGE(TAG, "Sensor is busy measuring");
+    return ESP_ERR_INVALID_STATE;
+  }
+
   ESP_ERROR_CHECK(write(cmd));
+  setMeasuring(true);
   delay(cmd);
   ESP_ERROR_CHECK(read(cmd, data));
+  setMeasuring(false);
 
   this->serialNumber = (uint32_t)data[0] << 24; // MSB
   this->serialNumber |= (uint32_t)data[1] << 16;
@@ -123,6 +131,7 @@ bool SHT4X::reset()
   uint8_t reg[1] = {CMD_SOFT_RESET};
   ESP_ERROR_CHECK(i2c_master_transmit(this->dev_handle, reg, sizeof(reg), MAX_WAIT));
   delay(CMD_SOFT_RESET);
+  setMeasuring(false);
   return (true);
 }
 
@@ -132,13 +141,31 @@ bool SHT4X::isConnected()
   return (true);                                                                         // All good
 }
 
+bool SHT4X::isMeasuring()
+{
+  return this->measuring;
+} 
+
+void SHT4X::setMeasuring(bool measuring)
+{
+  this->measuring = measuring;
+} 
+
 esp_err_t SHT4X::measure(sht4x_cmd_t cmd, float *temperature, float *humidity)
 {
   sht4x_data_t raw_data;
 
+  if( isMeasuring() )
+  {
+    ESP_LOGE(TAG, "Sensor is busy measuring");
+    return ESP_ERR_INVALID_STATE;
+  }
+
   ESP_ERROR_CHECK(write((uint8_t)cmd));
+  setMeasuring(true);
   delay((uint8_t)cmd);
   ESP_ERROR_CHECK(read((uint8_t)cmd, raw_data));
+  setMeasuring(false);
 
   *temperature = calculateTemperature(raw_data);
   *humidity = calculateHumidity(raw_data);

@@ -136,7 +136,7 @@ public:
    * 
    * @return true if reset is successful
    */
-  bool reset();       // Reset the SHT4X
+  bool reset();
 
   /**
    * @brief Check if the SHT4X sensor is connected
@@ -144,6 +144,20 @@ public:
    * @return true if device acks at the I2C address
    */
   bool isConnected();
+
+  /**
+   * @brief Check if the SHT4X sensor is measuring
+   * 
+   * @return true if the sensor is measuring
+   */
+  bool isMeasuring();
+
+  /**
+   * @brief Set the measuring state of the SHT4X sensor
+   * 
+   * @param measuring 
+   */
+  void setMeasuring(bool measuring);
 
   /**
    * @brief Get the Serial Number of the SHT4X sensor
@@ -160,6 +174,7 @@ private:
   i2c_master_bus_handle_t *bus_handle;
   i2c_master_dev_handle_t dev_handle;
   uint32_t serialNumber;
+  bool measuring;
 
   /**
    * @brief Get the Delay object
