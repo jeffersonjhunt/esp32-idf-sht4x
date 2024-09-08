@@ -1,14 +1,14 @@
 ESP32 IDF SHT-4x Library
 ===========================================================
 
- [![Sensirion SHT4x](https://sensirion.com/media/portfolio/series/image/07fb657d-331a-4652-b79f-0240926500f1.webp)](https://sensirion.com/media/documents/33FD6951/662A593A/HT_DS_Datasheet_SHT4x.pdf) 
+ [![Sensirion SHT4x](https://cdn-shop.adafruit.com/970x728/5665-01.jpg)](https://sensirion.com/media/documents/33FD6951/662A593A/HT_DS_Datasheet_SHT4x.pdf) 
 
  This SHT-4x ESP32 IDF driver allows you to connect the Sensirion SHT4x sensor to easily read temperature and relative humidity.
 
 A breakout board for prototyping is avaialbe from:
 
-- [SparkFun SHT40](https://www.sparkfun.com/) *DISCONTINUED*
 - [Adafruit SHT45 - STEMMA QT / Qwiic](https://www.adafruit.com/product/5665)
+- [SparkFun SHT4x](https://www.sparkfun.com/) *DISCONTINUED*
 
 Thanks to for code on which this driver is based: 
 
