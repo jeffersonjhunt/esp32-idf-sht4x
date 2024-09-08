@@ -19,7 +19,7 @@
   https://github.com/UncleRus/esp-idf-lib
 
   ESP32 IDF port by Jefferson J Hunt
-  https://github.com/jeffersonjhunt/esp32-idf-sh4x
+  https://github.com/jeffersonjhunt/esp32-idf-sht4x
 */
 
 #include "sht4x.h"
