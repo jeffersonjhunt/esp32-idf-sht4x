@@ -25,7 +25,7 @@ static const char *TAG = "driver-sht4x"; // tag for logging
 #define MAX_WAIT 10     // Maximum time to wait for I2C operations to complete
 #define DELAY_PADDING 1 // Delay padding for sensor read operations
 
-#define G_POLYNOM 0x31 // CRC-8 polynomial
+#define G_POLYNOM 0x31 // CRC-8 polynomial provided by Sensirion
 
 #define CMD_SOFT_RESET 0x94
 #define CMD_READ_SERIAL 0x89
@@ -58,14 +58,11 @@ bool SHT4X::begin(bool initialize)
   {
     ESP_LOGI(TAG, "Initializing SHT4X");
 
-    // Reset the SHT4X
     result &= reset();
-
-    // Read the serial number
     result &= readSerialNumber() == ESP_OK;
-
-    // Reset the SHT4X
     result &= reset();
+
+    ESP_LOGI(TAG, "Initializing SHT4X %s", result ? "successful" : "failed");
   }
 
   return (result);
@@ -120,8 +117,6 @@ esp_err_t SHT4X::write(uint8_t cmd)
   return ESP_OK;
 }
 
-// Reset the SHT4X
-// Returns true if reset is successful
 bool SHT4X::reset()
 {
   ESP_LOGD(TAG, "Resetting SHT4X");
@@ -131,21 +126,12 @@ bool SHT4X::reset()
   return (true);
 }
 
-// Returns true if device is present
-// Tests for device ack to I2C address
 bool SHT4X::isConnected()
 {
   ESP_ERROR_CHECK(i2c_master_probe(*this->bus_handle, SHT4X_I2CADDR_DEFAULT, MAX_WAIT)); // probe device
   return (true);                                                                         // All good
 }
 
-/**
- * @brief Measure temperature and humidity in Celsius and %RH using the
- * conversions specified in the datasheet.
- *
- * t_degC = -45 + 175 * t_ticks/65535
- * rh_pRH = -6 + 125 * rh_ticks/65535
- */
 esp_err_t SHT4X::measure(sht4x_cmd_t cmd, float *temperature, float *humidity)
 {
   sht4x_data_t raw_data;
@@ -154,10 +140,27 @@ esp_err_t SHT4X::measure(sht4x_cmd_t cmd, float *temperature, float *humidity)
   delay((uint8_t)cmd);
   ESP_ERROR_CHECK(read((uint8_t)cmd, raw_data));
 
-  *temperature = ((uint16_t)raw_data[0] << 8 | raw_data[1]) * 175.0 / 65535.0 - 45.0;
-  *humidity = ((uint16_t)raw_data[2] << 8 | raw_data[3]) * 125.0 / 65535.0 - 6.0;
+  *temperature = calculateTemperature(raw_data);
+  *humidity = calculateHumidity(raw_data);
 
   return ESP_OK;
+}
+
+float SHT4X::calculateTemperature(sht4x_data_t raw_data)
+{
+  return ((uint16_t)raw_data[0] << 8 | raw_data[1]) * 175.0 / 65535.0 - 45.0;
+}
+
+float SHT4X::calculateHumidity(sht4x_data_t raw_data)
+{
+  float rh_pRH = ((uint16_t)raw_data[2] << 8 | raw_data[3]) * 125.0 / 65535.0 - 6.0;
+
+  if (rh_pRH < 0)
+    rh_pRH = 0;
+  if (rh_pRH > 100)
+    rh_pRH = 100;
+  
+  return rh_pRH;
 }
 
 void SHT4X::delay(uint8_t cmd)
@@ -186,7 +189,6 @@ uint16_t SHT4X::getDelay(uint8_t cmd)
   }
 }
 
-// Return the serial number of the sensor
 uint32_t SHT4X::getSerialNumber()
 {
   return serialNumber;
