@@ -11,6 +11,10 @@
   budget (0.4 μW). The power-trimmed internal heater can be used at three
   heating levels thus enabling sensor operation in demanding environments.
 
+  Sensirion SHT4x reference drivers
+  https://github.com/Sensirion/embedded-sht
+  https://github.com/Sensirion/embedded-i2c-sht4x
+
   Original Ruslan V. Uss driver
   https://github.com/UncleRus/esp-idf-lib
 
