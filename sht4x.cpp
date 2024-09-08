@@ -5,15 +5,11 @@
   It is a port by Jefferson J Hunt @ OOE, August 28th, 2024 from the
   ESP-IDF driver by Ruslan V. Uss (https://github.com/UncleRus) 2021
 
-  The NAU7802 is an I2C device that converts analog signals to a 24-bit
-  digital signal. This makes it possible to create your own digital scale
-  either by hacking an off-the-shelf bathroom scale or by creating your
-  own scale using a load cell.
-
-  The NAU7802 is a better version of the popular HX711 load cell amplifier.
-  It uses a true I2C interface so that it can share the bus with other
-  I2C devices while still taking very accurate 24-bit load cell measurements
-  up to 320Hz.
+  SHT4x is a digital sensor platform for measuring relative humidity and 
+  temperature at different accuracy classes. Its I2C interface provides 
+  several preconfigured I2C addresses while maintaining an ultra-low power
+  budget (0.4 μW). The power-trimmed internal heater can be used at three
+  heating levels thus enabling sensor operation in demanding environments.
 
   Original Ruslan V. Uss driver
   https://github.com/UncleRus/esp-idf-lib
@@ -34,25 +30,18 @@ static const char *TAG = "driver-sht4x"; // tag for logging
 #define CMD_SOFT_RESET 0x94
 #define CMD_READ_SERIAL 0x89
 
-// Constructor
 SHT4X::SHT4X(i2c_master_bus_handle_t *bus_handle, i2c_device_config_t *dev_config)
 {
-  // initialize device
   this->bus_handle = bus_handle;
   ESP_ERROR_CHECK(i2c_master_bus_reset(*this->bus_handle));
   ESP_ERROR_CHECK(i2c_master_bus_add_device(*this->bus_handle, dev_config, &dev_handle));
 }
 
-// Destructor
 SHT4X::~SHT4X()
 {
   i2c_master_bus_rm_device(this->dev_handle);
 }
 
-// Sets up the SHT4X for basic function
-// If initialize is true (or not specified), default init and calibration is performed
-// If initialize is false, then it's up to the caller to initalize and calibrate
-// Returns true upon completion
 bool SHT4X::begin(bool initialize)
 {
   // Check if the device ack's over I2C
@@ -70,13 +59,13 @@ bool SHT4X::begin(bool initialize)
     ESP_LOGI(TAG, "Initializing SHT4X");
 
     // Reset the SHT4X
-    reset();
+    result &= reset();
 
     // Read the serial number
-    readSerialNumber();
+    result &= readSerialNumber() == ESP_OK;
 
     // Reset the SHT4X
-    reset();
+    result &= reset();
   }
 
   return (result);

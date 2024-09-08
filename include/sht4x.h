@@ -1,25 +1,21 @@
 /*
-  This is an ESP32 IDF library written for the NAU7802 24-bit wheatstone
-  bridge and load cell amplifier.
+  This is an updated v5.x ESP32 IDF library written for the Sensirion SHT4x
+  Digital Humidity and Temperature Sensors.
 
-  It is a port by Jefferson J Hunt @ OOE, August 23rd, 2024 from the
-  Arduino driver by Nathan Seidle @ SparkFun Electronics, March 3nd, 2019
+  It is a port by Jefferson J Hunt @ OOE, August 28th, 2024 from the
+  ESP-IDF driver by Ruslan V. Uss (https://github.com/UncleRus) 2021
 
-  The NAU7802 is an I2C device that converts analog signals to a 24-bit
-  digital signal. This makes it possible to create your own digital scale
-  either by hacking an off-the-shelf bathroom scale or by creating your
-  own scale using a load cell.
+  SHT4x is a digital sensor platform for measuring relative humidity and 
+  temperature at different accuracy classes. Its I2C interface provides 
+  several preconfigured I2C addresses while maintaining an ultra-low power
+  budget (0.4 μW). The power-trimmed internal heater can be used at three
+  heating levels thus enabling sensor operation in demanding environments.
 
-  The NAU7802 is a better version of the popular HX711 load cell amplifier.
-  It uses a true I2C interface so that it can share the bus with other
-  I2C devices while still taking very accurate 24-bit load cell measurements
-  up to 320Hz.
-
-  Original Nathan Seidle driver
-  https://github.com/sparkfun/SparkFun_NAU7802_Scale_Arduino_Library
+  Original Ruslan V. Uss driver
+  https://github.com/UncleRus/esp-idf-lib
 
   ESP32 IDF port by Jefferson J Hunt
-  https://github.com/jeffersonjhunt/esp32-idf-nau7802
+  https://github.com/jeffersonjhunt/esp32-idf-sh4x
 */
 
 #ifndef SHT4X_h
@@ -50,18 +46,88 @@ typedef enum
 class SHT4X
 {
 public:
-  SHT4X(i2c_master_bus_handle_t *bus_handle, i2c_device_config_t *dev_config); // Default constructor
-  ~SHT4X();                                                                    // Destructor
+  /**
+   * @brief Construct a new SHT4X object and bind it the I2C bus
+   *
+   * @param bus_handle I2C bus handle
+   * @param dev_config I2C device configuration
+   */
+  SHT4X(i2c_master_bus_handle_t *bus_handle, i2c_device_config_t *dev_config);
 
+  /**
+   * @brief Free the SHT4X device from the I2C bus
+   * 
+   */
+  ~SHT4X();
+
+  /**
+   * @brief Initialize the SHT4X sensor for basic function
+   * 
+   * If initialize is true, the sensor will be reset and the serial number will
+   * be read. If initialize is false, the sensor will be checked for connection
+   * only.
+   * 
+   * @param initialize If true, initialize and calibrate the sensor
+   * @return true if sensor is connected
+   */
   bool begin(bool initialize); // Check communication and initialize sensor
 
-  esp_err_t read(uint8_t cmd, sht4x_data_t &data);
-  esp_err_t write(uint8_t cmd);
-  bool reset();                // Reset the SHT4X
-  bool isConnected();          // Returns true if device acks at the I2C address
+  /**
+   * @brief Measure temperature and humidity in Celsius and %RH
+   * 
+   * This is the basic measurement function that should be used in most cases.
+   * It does not provide thread safety, if you are using multiple threads/tasks
+   * to access the sensor, you should use the read() and write() functions with
+   * the appropriate locks.
+   * 
+   * @param cmd mesurement to perform (see datasheet for details) 
+   * @param temperature 
+   * @param humidity 
+   * @return esp_err_t 
+   */
+  esp_err_t measure(sht4x_cmd_t cmd, float *temperature, float *humidity);
 
-  esp_err_t measure(sht4x_cmd_t cmd, float *temperature, float *humidity); // Measure temperature and humidity in Celsius and %RH
-  uint32_t getSerialNumber();                                              // Return the serial number of the sensor
+  /**
+   * @brief 
+   * 
+   * @param cmd 
+   * @param data 
+   * @return esp_err_t 
+   */
+  esp_err_t read(uint8_t cmd, sht4x_data_t &data);
+
+  /**
+   * @brief 
+   * 
+   * @param cmd 
+   * @return esp_err_t 
+   */
+  esp_err_t write(uint8_t cmd);
+
+  /**
+   * @brief Reset the SHT4X sensor
+   * 
+   * @return true if reset is successful
+   */
+  bool reset();       // Reset the SHT4X
+
+  /**
+   * @brief Check if the SHT4X sensor is connected
+   * 
+   * @return true if device acks at the I2C address
+   */
+  bool isConnected();
+
+  /**
+   * @brief Get the Serial Number of the SHT4X sensor
+   * 
+   * The serial number is determined during initialization and is stored in the
+   * class instance. This function returns the serial number. If initialization
+   * is not eanbled, it will return 0.
+   * 
+   * @return uint32_t 
+   */
+  uint32_t getSerialNumber();
 
 private:
   i2c_master_bus_handle_t *bus_handle;
